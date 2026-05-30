@@ -1,11 +1,9 @@
 import streamlit as st
 import pandas as pd
 import datetime
-from docxtpl import DocxTemplate, InlineImage  # Thêm InlineImage để chèn ảnh
-from docx.shared import Inches, Mm  # Thêm thư viện để chỉnh kích thước ảnh
+from docxtpl import DocxTemplate
 import io
 import zipfile
-import os
 
 st.title("Phần Mềm Cấp Giấy Xác Nhận Hoàn Thành Khóa Học")
 
@@ -47,7 +45,7 @@ if uploaded_file is not None:
         st.write("📋 **Bản xem trước dữ liệu:**")
         st.dataframe(df.head())
         
-        # Chuẩn hóa tên cột trong Excel để dễ so sánh (chuyển về chữ thường)
+        # Chuẩn hóa tên cột trong Excel của anh để dễ so sánh (chuyển về chữ thường)
         cols = {col.strip().lower(): col for col in df.columns}
         
         # Hàm thông minh tự động dò tìm các tên cột khả thi
@@ -58,12 +56,6 @@ if uploaded_file is not None:
             return ""
 
         if st.button("🚀 Bắt Đầu Tạo File Word"):
-            # Kiểm tra xem file ảnh chữ ký có tồn tại không
-            image_path = "chu_ky.png"
-            if not os.path.exists(image_path):
-                st.error("❌ Không tìm thấy file ảnh mộc chữ ký 'chu_ky.png' trong cùng thư mục!")
-                st.stop()
-
             zip_buffer = io.BytesIO()
             success_count = 0
             
@@ -85,10 +77,6 @@ if uploaded_file is not None:
                         st.error("❌ Không tìm thấy file 'template.docx' nằm cùng thư mục!")
                         st.stop()
                         
-                    # Khởi tạo đối tượng InlineImage cho chữ ký
-                    # Anh có thể thay đổi chiều rộng (width) bằng cách chỉnh Inches(1.5) hoặc Mm(40) cho vừa vặn
-                    anh_chu_ky = InlineImage(doc, image_path, width=Inches(1.8))
-                    
                     # Ánh xạ dữ liệu đa năng: tìm đúng tên cột anh đang dùng
                     context = {
                         'so_hoan_thanh': get_val(row, ['Số chứng chỉ', 'Số căn cước', 'Số hoàn thành']), 
@@ -101,8 +89,7 @@ if uploaded_file is not None:
                         'den_ngay': format_date(get_val(row, ['Đến ngày'])),
                         'ngay_ky': ngay,
                         'thang': thang,
-                        'nam': nam,
-                        'chu_ky': anh_chu_ky  # Thêm biến chữ ký vào context
+                        'nam': nam
                     }
                     
                     doc.render(context)
@@ -115,7 +102,7 @@ if uploaded_file is not None:
                     success_count += 1
                     
             if success_count > 0:
-                st.success(f"✅ Đã tạo thành công {success_count} giấy xác nhận có mộc chữ ký!")
+                st.success(f"✅ Đã tạo thành công {success_count} giấy xác nhận!")
                 st.download_button(
                     label="📥 Tải File ZIP chứa toàn bộ Giấy Xác Nhận",
                     data=zip_buffer.getvalue(),
